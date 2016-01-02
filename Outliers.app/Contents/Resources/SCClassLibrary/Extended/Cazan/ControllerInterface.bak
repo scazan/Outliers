@@ -1,0 +1,148 @@
+// A class for use with two PS/2-style gamepad controllers in conjunction with HIDserver from ixi software. 
+// Numbered buttons control the instrument banks. Outer joysticks control volume at the moment (need to be able to map those)
+// and inner joysticks are mappable.
+
+ControllerInterface {
+
+	var w, w2,b2;
+	var controllerWindow;
+	var joystickOSC;
+	var windowName = "Controller";
+
+	//Two arrays to contain the widgets that will control each synth. The gamepads interact with the widgets, not the synths.
+	var controlWidgetsOne, controlWidgetsTwo;
+
+	//Parameters for the GamePads. THESE SHOULD BE SET BEFORE LOAD.
+	//Pass in a 2D array of synths. One array of synths for each of the three controller-selectable instruments.
+	var <>synthsOne;
+	var <>synthsTwo;
+	//Pass in a 3D array of controller mappings. Why 3D? First dimension for each controller-selectable instrument,
+	//	second dimension for each synth that is accesible to that button (selectable from the Widget window,
+	//	and third dimension so you can have multiple parameters mapped to the movement of X or Y.
+	var <>controllerOneXMappings, <>controllerOneYMappings;
+	var <>controllerTwoXMappings, <>controllerTwoYMappings;
+
+	//A variable representing the current instrument "patch"
+	var currentSelectedInstrumentOne = 0;
+	var currentSelectedInstrumentTwo = 0;
+
+	//Variables for whether the parameter joystick is active
+	var controllerOneActive = true;
+	var controllerTwoActive = true;
+
+
+
+
+	*new {
+		^super.new.init()
+	}
+
+	init {
+		//Initialize all the arrays
+		synthsOne = Array.newClear(16);
+		synthsTwo = Array.newClear(16);
+
+		controllerOneXMappings = Array.newClear(16);
+		controllerOneYMappings = Array.newClear(16);
+		controllerTwoXMappings = Array.newClear(16);
+		controllerTwoYMappings = Array.newClear(16);
+		controlWidgetsOne = Array.newClear(16);
+		controlWidgetsTwo = Array.newClear(16);
+		
+	}
+
+	load {
+		this.loadGamePadOSC;
+		"OSC Loaded".postln;
+		this.loadGUI;
+	}
+	
+	loadGUI {
+
+		//JSC Window
+		controllerWindow=JSCWindow(WindowName, Rect(50,50,885,210));
+		controllerWindow.view.background = Color.gray(0.5,1);
+
+		this.loadControllerOneGUI;
+		//this.loadControllerTwoGUI;
+
+		controllerWindow.front;
+		controllerWindow.onClose={
+			synthsOne.do({
+				arg synthArray;
+				synthArray.do({arg synth;
+					//To avoid "/n_free Node not found" errors check if synth even exists
+					if(synth==nil,{},
+					{
+						synth.defName.postln;
+						synth.free;
+					});
+				});
+			});
+			synthsTwo.do({
+				arg synthArray;
+				synthArray.do({arg synth;
+					//To avoid "/n_free Node not found" errors check if synth even exists
+					if(synth==nil,{},
+					{
+						synth.free;
+					});
+				});
+			});
+			joystickOSC.remove;
+		};
+	}
+
+	//Controller One GUI
+	loadControllerOneGUI {
+
+		//For each member of synths, load an XYWidget for it
+		synthsOne.do({ arg item, i;
+			if(item==nil,{},{
+				var widget;
+				widget = SliderControlWidget.new(controllerWindow, synthsOne[i], controllerOneXMappings[i], controllerOneYMappings[i]);
+				widget.loadGUI(i,0);
+				controlWidgetsOne.put(i, widget);
+			});
+		});
+
+	}
+
+	//Controller Two GUI
+	loadControllerTwoGUI {
+
+		//For each member of synths, load an XYWidget for it
+		synthsTwo.do({ arg item, i;
+			if(item==nil,{},{
+				var widget;
+				widget = SliderControlWidget.new(controllerWindow, synthsTwo[i], controllerTwoXMappings[i], controllerTwoYMappings[i]);
+				widget.loadGUI(i,1);
+				controlWidgetsTwo.put(i, widget);
+			});
+		});
+
+	}
+
+	loadGamePadOSC {
+
+		//Mappings -----------------------------------------------------------
+
+		joystickOSC = CCResponder({ |src,chan,num,value|
+				
+				//Volume Controller message (control 7)
+				if (num==7,{
+					if(controllerOneActive, {
+						var messageY = (value)/127.0;
+						
+						controlWidgetsOne[chan].setY(messageY);
+					});
+						
+				});
+				//});
+
+			}, nil, nil, nil, nil)
+		}
+
+				
+		//END Mappings-------------------------------------------------
+	}                                                                                                                                                                                                                                                                                                                                  

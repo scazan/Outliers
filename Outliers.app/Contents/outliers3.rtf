@@ -1,0 +1,182 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1138\cocoasubrtf470
+{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red179\green0\blue0;\red230\green230\blue230;\red255\green165\blue0;
+\red50\green205\blue50;\red128\green0\blue128;\red0\green206\blue209;}
+\deftab560
+\pard\pardeftab560
+
+\f0\fs28 \cf2 /*RUN*/\cf3 \
+s.waitForBoot(\{\
+	\cf4 var\cf3  win, startButton, nextButton, stopButton, nextFunc, startFunc, pitchDisplay, automatedRoutine;\
+	\cf4 var\cf3  totalTime = \cf5 10 \cf3 * \cf5 60\cf3 ; \cf2 //Represented in seconds.\cf3 \
+	\cf4 var\cf3  numSections = \cf5 5\cf3 ;\
+	\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab560\pardirnatural
+\cf3 	p = \cf4 ProxySpace\cf3 .push(s);\
+\
+	~pitchListener = \{ \cf4 var\cf3  freq, hasFreq; #freq, hasFreq = \cf4 Pitch\cf3 .kr(\cf4 SoundIn\cf3 .ar(\cf5 1\cf3 ), ampThreshold: \cf5 0.02\cf3 , median: \cf5 7\cf3 ); \cf4 SendTrig\cf3 .kr(\cf4 Impulse\cf3 .kr(\cf5 2\cf3 ),\cf5 0\cf3 ,freq) \};\
+	\
+\pard\pardeftab560
+\cf3 \
+	nextFunc = \{\
+		\cf4 var\cf3  noteNames, numPitchesToRemove = \cf5 4\cf3 ;\
+	\
+		o.remove;\
+		t.switch(\
+			\cf5 1\cf3 , \{numPitchesToRemove = \cf5 4\cf3 \},\
+			\cf5 2\cf3 , \{numPitchesToRemove = \cf5 3\cf3 \},\
+			\cf5 3\cf3 , \{numPitchesToRemove = \cf5 3\cf3 \},\
+			\cf5 4\cf3 , \{numPitchesToRemove = \cf5 1\cf3 \}\
+		);\
+		\
+		noteNames = [\cf6 "C"\cf3 ,\cf6 "Db"\cf3 ,\cf6 "D"\cf3 ,\cf6 "Eb"\cf3 ,\cf6 "E"\cf3 ,\cf6 "F"\cf3 ,\cf6 "Gb"\cf3 ,\cf6 "G"\cf3 ,\cf6 "Ab"\cf3 ,\cf6 "A"\cf3 ,\cf6 "Bb"\cf3 ,\cf6 "B"\cf3 ];\
+		n = \cf4 Array\cf3 .new(\cf5 12\cf3 );\
+		\
+		\cf5 12\cf3 .do(\{ \cf4 arg\cf3  item, i;\
+			n.add([d.at(i),noteNames.at(i)]);\
+		\});\
+		\
+		n.sort(\{ \cf4 arg\cf3  a, b; a.at(\cf5 0\cf3 ) > b.at(\cf5 0\cf3 ) \});\
+		\
+		r.do(\{ \cf4 arg\cf3  itemR, i;\
+			n.do(\{\cf4 arg\cf3  itemN, j;\
+				if(n[j][\cf5 1\cf3 ] == r[i],\
+					\{n.removeAt(j);\},\
+					\{\}\
+				);\
+			\});\
+		\});\
+		\
+		\
+		numPitchesToRemove.do(\{ \cf4 arg\cf3  item, i;\
+			\cf4 var\cf3  found = \cf4 false\cf3 ; \
+			j = \cf5 0\cf3 ;\
+	\
+			while(\{found == \cf4 false\cf3  && (j < r.size)\},\
+			\{\
+				n[i][\cf5 1\cf3 ].post;\
+				r[j].postln;\
+				\
+				if(n[i][\cf5 1\cf3 ] == r[j], \
+					\{ j = j+\cf5 1\cf3 ; \}, \
+					\{\
+						r.add(n[i][\cf5 1\cf3 ]);\
+						n.removeAt(i);\
+						found = \cf4 true\cf3 ;\
+					\}\
+				);\
+			\});\
+		\});\
+		\
+		t = t+\cf5 1\cf3 ;\
+		\
+		if(t <= (numSections - \cf5 1\cf3 ), \{\
+			o.add;\
+		\});\
+		\
+	\};\
+	\
+	startFunc = \{\
+	\
+		\cf2 //Step\cf3 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab560\pardirnatural
+\cf3 		t = \cf5 1\cf3 ;\
+			\
+		e = \cf4 EqualTemperedTuningTable\cf3 .new;\
+		e.init;\
+\pard\pardeftab560
+\cf3 		e.setEqualTemperedTable;\
+	\
+		d = \cf4 Dictionary\cf3 .new;\
+		d.add(\cf5 0 \cf3 -> \cf5 0\cf3 );\
+		d.add(\cf5 1 \cf3 -> \cf5 0\cf3 );\
+		d.add(\cf5 2 \cf3 -> \cf5 0\cf3 );\
+		d.add(\cf5 3 \cf3 -> \cf5 0\cf3 );\
+		d.add(\cf5 4 \cf3 -> \cf5 0\cf3 );\
+		d.add(\cf5 5 \cf3 -> \cf5 0\cf3 );\
+		d.add(\cf5 6 \cf3 -> \cf5 0\cf3 );\
+		d.add(\cf5 7 \cf3 -> \cf5 0\cf3 );\
+		d.add(\cf5 8 \cf3 -> \cf5 0\cf3 );\
+		d.add(\cf5 9 \cf3 -> \cf5 0\cf3 );\
+		d.add(\cf5 10 \cf3 -> \cf5 0\cf3 );\
+		d.add(\cf5 11 \cf3 -> \cf5 0\cf3 );\
+		\
+		r = \cf4 Array\cf3 .new(\cf5 12\cf3 );\
+		r.add(\cf6 "X"\cf3 );\
+	\
+		o = \cf4 OSCresponder\cf3 (s.addr,\cf7 '/tr'\cf3 ,\{ \cf4 arg\cf3  time,responder,msg;\
+			a = e.getTemperedPitch(msg[\cf5 3\cf3 ].asFloat);\
+			a = (a.cpsmidi % \cf5 12\cf3 );\
+			a = a.asInteger;\
+			b = d.at(a).asFloat + \cf5 1\cf3 ;\
+			d.add(a -> b);\
+			\cf2 //a.postln;\cf3 \
+		\}).add\
+	\};\
+	\
+	win = \cf4 Window\cf3 ( \cf6 "Outliers"\cf3 , \cf4 Rect\cf3 ( \cf5 10\cf3 , \cf5 10\cf3 , \cf5 740\cf3 , \cf5 560 \cf3 ));\
+	win.addFlowLayout; \
+		\
+	win.view.background = \cf4 Color\cf3 ( \cf5 0.6\cf3 , \cf5 0.6\cf3 , \cf5 0.6 \cf3 );\
+	\
+	pitchDisplay = \cf4 StaticText\cf3 (win, \cf4 Rect\cf3 (\cf5 0\cf3 , \cf5 0\cf3 , \cf5 730\cf3 , \cf5 500\cf3 ));\
+	pitchDisplay.font = \cf4 Font\cf3 .new(\cf6 "Monaco"\cf3 , \cf5 72\cf3 );\
+	pitchDisplay.background =  \cf4 Color\cf3 .white;\
+	pitchDisplay.string = \cf6 ""\cf3 ;\
+	pitchDisplay.align_(\cf7 \\left\cf3 );\
+	\
+	automatedRoutine = \cf4 Routine\cf3  \{\
+		\
+		(totalTime / numSections).wait;\
+		\
+		(numSections-\cf5 1\cf3 ).do(\{\
+			nextFunc.value;\
+\
+			pitchDisplay.string = \cf6 ""\cf3 ;	\
+			n.do(\{\cf4 arg\cf3  item, i;\
+				pitchDisplay.string = pitchDisplay.string + n[i][\cf5 1\cf3 ] + \cf6 "  "\cf3 ;\
+			\});\
+			\
+			(totalTime / numSections).wait;\
+		\});\
+		\
+		pitchDisplay.string = pitchDisplay.string + \cf6 "   (END)"\cf3 ;\
+	\};\
+	\
+	nextButton = \cf4 Button\cf3 (win, \cf4 Rect\cf3 (\cf5 0\cf3 ,\cf5 0\cf3 ,\cf5 730\cf3 ,\cf5 50\cf3 ))\
+		.states_([\
+			[\cf6 "Start"\cf3 , \cf4 Color\cf3 .black, \cf4 Color\cf3 .red],\
+			[\cf6 "Playing"\cf3 , \cf4 Color\cf3 .white, \cf4 Color\cf3 .black],			\
+		])\
+		.action_(\{ \cf4 arg\cf3  butt;\
+			\
+			butt.value.switch(\
+				\cf5 0\cf3 ,\{\
+					pitchDisplay.string = \cf6 ""\cf3 ;\
+					\cf4 AppClock\cf3 .clear;\
+					\cf6 "CLEAR"\cf3 .postln;\
+					automatedRoutine.reset;\
+					\cf2 //automatedRoutine.stop;\cf3 \
+				\},\
+				\cf5 1\cf3 , \{\
+					startFunc.value;\
+					pitchDisplay.string = \cf6 "C  Db  D  Eb  E  F  Gb  G  Ab  A  Bb  B"\cf3 ;\
+					\cf4 AppClock\cf3 .play(automatedRoutine);\
+				\},\
+				\{\
+					\cf4 AppClock\cf3 .clear;\
+					\cf2 //automatedRoutine.stop;\cf3 \
+				\}\
+			);\
+		\});\
+		\
+		nextButton.font = \cf4 Font\cf3 .new(\cf6 "Monaco"\cf3 ,\cf5 16\cf3 ) ;\
+	\
+	win.front;\
+	\
+\});\
+\
+\
+\
+\
+}

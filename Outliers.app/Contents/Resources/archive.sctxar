@@ -1,0 +1,54 @@
+var o, p;
+o = [
+	Archive.prNew,  IdentityDictionary.prNew,  Array.prNew(32),  IdentityDictionary.prNew,  
+	Array.prNew(32),  Point.prNew,  Point.prNew,  Point.prNew,  
+	Point.prNew,  Point.prNew,  Point.prNew,  Point.prNew,  
+	Point.prNew
+];
+p = [
+	// Archive
+	0, [ dictionary: o[1] ],  
+	// IdentityDictionary
+	1, [ array: o[2],  size: 1,  
+		proto: nil,  parent: nil,  
+		know: false ],  
+	// Array
+	2, [ nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		nil,  nil,  'win_position',  o[3] ],  
+	// IdentityDictionary
+	3, [ array: o[4],  size: 8,  
+		proto: nil,  parent: nil,  
+		know: false ],  
+	// Array
+	4, [ '- eq meter -',  o[5],  nil,  nil,  
+		nil,  nil,  nil,  nil,  
+		'soundpool 1',  o[6],  '- recorder -',  o[7],  
+		nil,  nil,  nil,  nil,  
+		'- player -',  o[8],  nil,  nil,  
+		nil,  nil,  'Spectral RectComb 2x2',  o[9],  
+		nil,  nil,  ' ixi quarks',  o[10],  
+		'          AudioIn 2x2',  o[11],  '- noise 2x2 -',  o[12] ],  
+	// Point
+	5, [ x: 200.000000,  y: 200.000000 ],  
+	// Point
+	6, [ x: 1157.000000,  y: 293.000000 ],  
+	// Point
+	7, [ x: 642.000000,  y: 207.000000 ],  
+	// Point
+	8, [ x: 440.000000,  y: 80.000000 ],  
+	// Point
+	9, [ x: 205.000000,  y: 206.000000 ],  
+	// Point
+	10, [ x: 944.000000,  y: 632.000000 ],  
+	// Point
+	11, [ x: 200.000000,  y: 201.000000 ],  
+	// Point
+	12, [ x: 200.000000,  y: 200.000000 ]
+];
+prUnarchive(o,p);

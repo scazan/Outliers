@@ -1,0 +1,233 @@
+// A class that follows a series of variations that are performed, then guesses what will be sung next
+// Scott Cazan
+// 10/28/08
+//
+
+MelodyFollower {
+
+	var aValue, bValue, cValue, <>currentMelody, currentMelodyAddIndex=0, 
+		firstPositions, distanceScores, finalScores, resultIndex=0, <>melodyHistory,
+		depth;
+
+	* new { arg chainDepth;
+		^super.new.init(chainDepth);
+	}
+
+	init { arg chainDepth;
+		depth = chainDepth;
+		//An array for storing all the first positions of each old melody
+		currentMelody = Array.new(32);
+		firstPositions = Array.newClear(depth);
+		distanceScores = Array.newClear(depth);
+		finalScores = Array.newClear(depth);
+		melodyHistory = Array.newClear(depth);
+	}
+
+	//Add a pitch to the currentMelody
+	addToCurrentMelody { arg pitch;
+		currentMelody = currentMelody.add(pitch);
+	}
+
+
+	//To be triggered when there is a long enough pause to warrant tracking the next pitch as part of a new melody/variation
+	newMelody {
+		//Take each melody and shift it over one, dropping the last melody from the stack
+		melodyHistory.addFirst(currentMelody);
+		melodyHistory.pop;
+
+		//Add the previous currentMelody to the top of the stack
+		//melodyHistory.put(0,currentMelody);
+		currentMelody = Array.new(32);
+	}
+
+//Distance Score Section-----------------------------------------------------------------------
+//Make a new static class for this!
+
+	//Compiles (and retrieves) distance scores into an array of scores
+	getNoteDistanceScores {
+		
+		//For each oldMelody get the distance scores
+		melodyHistory.do({arg oldMelody, index;
+			var score;
+
+			score = this.computeNoteDistances(oldMelody);
+			//Then store the scores into an index of scores
+			distanceScores.put(index, score);
+			//"Score: ".post;
+			//score.postln;
+			
+		});
+	}
+
+	//Gets the distance between each note and the next note
+	computeNoteDistances { arg oldMelody;
+
+		corr(currentMelody, oldMelody);
+		
+		/*
+		var distances = Array.newClear(currentMelody.size() );
+		var pitch1, pitch2, cmIndex=0;
+		
+		while({cmIndex < (currentMelody.size)}, { 
+			var currentPitch = currentMelody[cmIndex];
+
+			pitch1 = 0;
+			pitch2 = 0;
+			//Add 1 to eliminate the idea that you might be subtracting zero
+			pitch1 = this.getPitchIndex(oldMelody, currentMelody[cmIndex]);
+			//Just want to get it working. Doing this for now:
+			if(currentMelody[cmIndex+1].notNil,
+			{
+				pitch2 = this.getPitchIndex(oldMelody, currentMelody[cmIndex+1]);
+			},
+			{
+				pitch2=0;
+			});
+
+			//This ensures that if the pitch is not found, we ignore it (for now).
+			//Since I'm doing some arithmetic for the zero-based array indexes, 
+			//I need to account for that. When the pitch is zero, it should make the subtraction
+			//result in a distance of zero.
+			if(pitch2<0,
+			{
+				pitch1 = pitch1+1;
+				pitch2 = pitch1+1;
+			},
+			{
+				pitch1 = pitch1+1;
+				pitch2 = pitch2+1;
+			});
+
+
+			//pitch1.post;
+			//",".post;
+			//pitch2.postln;
+			
+			if(pitch2>pitch1,
+			{
+				distances.put(cmIndex, (pitch2-pitch1)-1);
+			},
+			{
+				distances.put(cmIndex, (pitch1-pitch2)-1);
+			});
+			//"This Distance: ".post;
+			//distances[cmIndex].postln;
+
+			cmIndex = cmIndex+1;
+		});
+
+		//"Distances: ".post;
+		//distances.postln;
+		^distances.sum();
+		*/
+	}
+
+//End Distance Scores section--------------------------------------------------------------------
+
+
+	//Gets the index of any pitch
+	getPitchIndex { arg melody, pitch;
+		var pitchIndex, currentIndex;
+		//"PITCH: ".post;
+		//	pitch.postln;
+		pitchIndex = -1;
+		currentIndex = 0;
+
+		while({ ((pitchIndex < 0) || (currentIndex >= (melody.size-1) )) && (pitch.notNil && melody[currentIndex].notNil) },
+		{
+			//"compare: ".post;
+			//melody[currentIndex].post;
+			//",".post;
+			//pitch.postln;
+			
+			if(melody[currentIndex]==pitch,
+			{
+				pitchIndex = currentIndex;
+			});
+
+			currentIndex = currentIndex+1;
+			//pitchIndex = pitchIndex+1;
+		});
+		
+		//If the pitch was not found, give it a value of 2
+		//if(pitchIndex < 0, {pitchIndex = 0});
+
+		//Change this to find the closest pitch and report that back instead
+		//if(pitch.notNil,{},{pitchIndex = -1});
+		//if(pitch.notNil,{},{pitchIndex = this.findIndexOfClosestPitch(melody, pitch)});
+
+		//"Pitch Index: ".post;
+		//pitchIndex.postln;
+
+		^pitchIndex;
+	}
+
+	findIndexOfClosestPitch { arg melody, pitch;
+		//Making this large enough to never make it less than the smallest score (setting to zero would cause tha
+		var pitchIndex = 20000;
+
+		//Search for the closest matching pitch in a melody/array and return its index
+		melody.do({ arg melodyPitch, index;
+			var score = 1000000;
+			
+			if((pitch - melodyPitch).abs < score,
+			{
+				score = (pitch - melodyPitch).abs;
+				pitchIndex = index;
+			});
+			
+		});
+
+		^pitchIndex;
+
+	}
+
+	//Add up all scores
+	addScores {
+		distanceScores.do({arg score, index;
+			finalScores.put(index,score);
+		});
+		//finalScores.postln;
+	}
+
+
+	//Figures out which of the scores is the smallest
+	getClosestMelody {
+		finalScores.do({ arg finalScore, index;
+			
+			//If the current value/score is less than our previous lowest-value/score, then make this value the new
+			//lowest-index
+			if(finalScore<finalScores[resultIndex],
+			{
+				resultIndex = index;
+			});
+
+			
+		});
+	}
+
+	//Computes the closest melody and then spits out the next note in that melody
+	predictNextNote {
+		var nextNote, pitchIndex;
+
+		this.getClosestMelody();
+		pitchIndex = this.getPitchIndex(melodyHistory[resultIndex], currentMelody[currentMelody.size()-1] );
+		nextNote = melodyHistory[resultIndex][pitchIndex+1];
+
+		^nextNote;
+	}
+
+	//Spit out the best result to the console
+	postResult{
+		//Results
+		"Current Melody: ".post;
+		currentMelody.postln;
+		"Best Matched Melody: ".post;
+		melodyHistory[resultIndex].postln;
+		"".postln;
+		"All Melodies: ".post;
+		melodyHistory.postln;
+	}
+
+}
+//end class                                                                                                                                                                                                                                 

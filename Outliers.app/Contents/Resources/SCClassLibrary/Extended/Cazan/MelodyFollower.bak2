@@ -1,0 +1,190 @@
+// A class that follows a series of variations that are performed, then guesses what will be sung next
+
+MelodyFollower {
+
+	var aValue, bValue, cValue, <>currentMelody, 
+		firstPositions, distanceScores, finalScores, resultIndex=0, <>melodyHistory,
+		depth;
+
+	* new { arg chainDepth;
+		^super.new.init(chainDepth);
+	}
+
+	init { arg chainDepth;
+		depth = chainDepth;
+		//An array for storing all the first positions of each old melody
+		currentMelody = Array.new(32);
+		firstPositions = Array.newClear(depth);
+		distanceScores = Array.newClear(depth);
+		finalScores = Array.newClear(depth);
+		melodyHistory = Array.newClear(depth);
+	}
+
+
+	addToCurrentMelody { arg pitch;
+		currentMelody.add(pitch);
+	}
+
+	//To be triggered when there is a long enough pause to warrant tracking the next pitch as part of a new melody/variation
+	newMelody {
+		//Take each melody and shift it over one, dropping the last melody from the stack
+
+		melodyHistory.addFirst(currentMelody);
+		melodyHistory.pop;
+		
+
+		//Add the previous currentMelody to the top of the stack
+		//melodyHistory.put(0,currentMelody);
+		currentMelody = Array.new(32);
+	}
+
+
+	//FINDS THE OFFSET POSITION IN THE OLDER MELODIES OF THE CURRENT MELODY. THIS GRANTS IT A GOOD STARTING POINT.
+	getMelodyOffsets {
+		//for each member of the older melodies
+		melodyHistory.do({arg oldMelody, yPos;
+			var occurenceFound = 0, index = 0;
+
+			//For each pitch in the stored melodies
+			while({index <= oldMelody.size},
+			{
+				//And while we still haven't found the first occurence
+				if(occurenceFound==0,
+				{	
+					//Go through
+					//item.do(arg pitchValue;
+					//{
+						//If the pitch is equal to the first pitch of the melody, set that pitches
+						//position in the firstPositions array and mark that we have found it.
+						if(oldMelody[index]==currentMelody[0], {occurenceFound=1; firstPositions.put(yPos,index)});
+
+					//});
+				});
+				index = index+1;
+			});
+
+			("OFFSET: ").post;
+			firstPositions.postln;
+
+
+		});
+	}
+
+
+	//Gets the distance between each note and the next note
+	computeNoteDistances { arg oldMelody;
+
+		var distances = Array.newClear(currentMelody.size() );
+		var pitch1, pitch2;
+
+		currentMelody.do({ arg currentPitch, cmIndex;
+			//Add 1 to eliminate the idea that you might be subtracting zero
+			pitch1 = this.getPitchIndex(oldMelody, currentMelody[cmIndex])+1;
+			pitch2 = this.getPitchIndex(oldMelody, currentMelody[cmIndex+1])+1;
+
+			distances.put(cmIndex, (pitch2-pitch1)-1);
+		});
+
+		^distances.sum();
+	}
+
+
+	//Gets the index of any pitch
+	getPitchIndex { arg melody, pitch;
+		var pitchIndex = -1,
+			currentIndex=0;
+		
+	
+		while({pitchIndex<0},
+		{
+			if(melody[currentIndex]==pitch,
+			{
+				pitchIndex = currentIndex;
+			});
+
+			currentIndex = currentIndex+1;
+		});
+
+		^pitchIndex;
+	}
+
+	//
+	getNoteDistanceScores {
+		//WTF: just do this
+		//currentMelody.hammingDistance(
+		//Now for each oldMelody judge the distance to the next note to see how similar it is
+		melodyHistory.do({arg oldMelody, yPos;
+			var melodyOffset, score=0, tempDistance=0;
+			//Setup the offset for this particular melody (item)
+			melodyOffset = firstPositions[yPos];
+			"Current Offset: ".post;
+			firstPositions[yPos].postln;
+			
+			currentMelody.do({ arg mPitch, index;
+				//If the next pitch in the melody is not the same, add one to the distance.
+				//Otherwise if it is the same, don't add one, add the distance to the score,
+				//and then reset tempDistance to 0.
+				"first Positioned Pitch: ".post;
+				oldMelody[index+melodyOffset].postln;
+				if(oldMelody[index+melodyOffset]==mPitch,
+				{
+					tempDistance = 0;
+				},
+				{
+					tempDistance = tempDistance+1;
+					score = score+tempDistance;
+				});  
+				"Current Distance: ".post;
+				tempDistance.postln;
+				"Score: ".post;
+				score.postln;
+			});
+			//Add this score for this particular melody
+			
+			distanceScores.put(yPos, score);
+			"distanceScores: ".post;
+			distanceScores.postln;
+			"---------------------------------------------".postln;
+			score = 0;
+			
+		});
+	}
+
+	//Add up all scores
+	addScores {
+		distanceScores.do({arg score, index;
+			finalScores.put(index,score);
+		});
+		finalScores.postln;
+	}
+
+
+	//Figures out which of the scores is the smallest
+	getClosestMelody {
+		finalScores.do({ arg finalScore, index;
+			
+			//If the current value/score is less than our previous lowest-value/score, then make this value the new
+			//lowest-index
+			if(finalScore<finalScores[resultIndex],
+			{
+				resultIndex = index;
+			});
+
+			
+		});
+	}
+
+	//Spit out the best result to the console
+	postResult{
+		//Results
+		"Current Melody: ".post;
+		currentMelody.postln;
+		"Best Matched Melody: ".post;
+		melodyHistory[resultIndex].postln;
+		"".postln;
+		"All Melodies: ".post;
+		melodyHistory.postln;
+	}
+
+}
+//end class                                                                             
